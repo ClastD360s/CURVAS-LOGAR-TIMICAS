@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Curvas Logarítmicas en Video y Fotografía</title>
+    <!-- Carga de Tailwind CSS --><script src="https://cdn.tailwindcss.com"></script>
+    <!-- Carga de la fuente Inter --><link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Text:wght@400;700;900&family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Estilos base */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #111827; /* bg-gray-900 */
+            color: #f3f4f6; /* text-gray-100 */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden; /* Evita barras de desplazamiento */
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Contenedor de la presentación a pantalla completa */
+        #presentation-container {
+            width: 100vw; /* Ancho de la ventana */
+            height: 100vh; /* Alto de la ventana */
+            position: relative;
+            background-color: #111827; /* bg-gray-900 */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Estilo base de una diapositiva */
+        .slide {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            display: none; /* Ocultas por defecto */
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 4rem 8rem 8rem; /* Más padding para contenido en pantalla grande */
+            text-align: center;
+            opacity: 0;
+            /* Transición inspirada en el CodePen - MODIFICADA para Parallax */
+            visibility: hidden;
+            /* transform: scale(1.05); */ /* Eliminamos el scale de toda la diapositiva */
+            transition: opacity 0.8s ease-out, visibility 0.8s; /* Transición principal de fundido */
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            position: relative; /* Para el overlay */
+        }
+
+        .slide::before { /* Overlay oscuro para el texto */
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.4); /* Ajusta la opacidad si es necesario */
+            z-index: 1;
+            /* Transición para el fondo (parallax) */
+            transform: scale(1.1); /* Inicia ligeramente ampliado */
+            transition: transform 1.2s cubic-bezier(0.19, 1, 0.22, 1); /* Transición larga y suave */
+        }
+
+        .slide > * { /* Asegura que el contenido esté por encima del overlay */
+            z-index: 2;
+            position: relative;
+            /* Transición para el contenido (parallax) */
+            transform: translateY(40px); /* Inicia 40px abajo */
+            opacity: 0;
+            transition: transform 0.8s cubic-bezier(0.19, 1, 0.22, 1), opacity 0.8s ease-out;
+            transition-delay: 0.1s; /* El contenido entra un poco después que el fondo */
+        }
+
+        /* Diapositiva activa */
+        .slide.active {
+            display: flex;
+            opacity: 1;
+            /* Estilos de transición para la diapositiva activa */
+            visibility: visible;
+            /* transform: scale(1); */ /* Ya no es necesario */
+        }
+        
+        /* Efectos Parallax en la diapositiva activa */
+        .slide.active::before {
+            transform: scale(1); /* Fondo vuelve a su tamaño normal */
+            background-color: rgba(0, 0, 0, 0.5); /* Oscurecemos un poco más al activar */
+        }
+        
+        .slide.active > * {
+            transform: translateY(0); /* Contenido sube a su posición */
+            opacity: 1; /* Contenido se hace visible */
+        }
+
+        /* Estilos de navegación */
+        #navigation {
+            position: absolute;
+            bottom: 3rem; /* Más abajo para pantalla completa */
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 1.5rem; /* Más espacio entre botones */
+            z-index: 10;
+        }
+
+        .nav-button {
+            background-color: #3b82f6; /* bg-blue-500 */
+            color: white;
+            padding: 1rem 2rem; /* Botones más grandes */
+            border-radius: 0.75rem; /* rounded-xl */
+            font-weight: 700;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            user-select: none;
+            border: none;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .nav-button:hover {
+            background-color: #2563eb; /* bg-blue-600 */
+        }
+
+        .nav-button:disabled {
+            background-color: #4b5563; /* bg-gray-600 */
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        /* Estilos de contenido */
+        .slide-title {
+            font-family: 'Crimson Text', serif; /* Nueva fuente */
+            font-size: 3.5rem; /* Más grande para pantalla completa */
+            font-weight: 900;
+            color: #f3f4f6; /* text-gray-100 (Cambiado de azul a blanco) */
+            margin-bottom: 1.5rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5); /* Sombra para mejor legibilidad */
+        }
+
+        .slide-subtitle {
+            font-family: 'Crimson Text', serif; /* Nueva fuente */
+            font-size: 1.8rem; /* Más grande */
+            font-weight: 400;
+            color: #e0e7ff; /* light blue-100 */
+            max-width: 90%;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+        }
+
+        .slide-text {
+            font-size: 1.3rem; /* Más grande */
+            color: #e0e7ff; /* light blue-100 */
+            max-width: 80%;
+            line-height: 1.75;
+            margin-top: 2rem;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+        
+        .slide-list {
+            list-style-type: disc;
+            margin-left: 2rem;
+            text-align: left;
+            max-width: 70%; /* Ajustado para mejor legibilidad */
+            line-height: 2;
+        }
+        .slide-list li {
+             margin-bottom: 0.75rem;
+        }
+
+
+        .image-comparison {
+            display: flex;
+            gap: 2rem;
+            justify-content: center;
+            align-items: center;
+            margin-top: 2rem;
+        }
+        
+        .image-comparison figure {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: rgba(0,0,0,0.4); /* Fondo para las imágenes en comparación */
+            padding: 1rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        .image-comparison img {
+            max-width: 100%;
+            height: 200px; /* Altura fija para la comparación */
+            object-fit: contain; /* Asegura que la imagen se vea completa */
+            border-radius: 0.5rem;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .image-comparison figcaption {
+            font-size: 1rem;
+            color: #d1d5db; /* text-gray-300 */
+            margin-top: 0.75rem;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Contenedor principal de la presentación --><div id="presentation-container">
+
+        <!-- Diapositiva 1: Título --><div class="slide active" data-slide="0" style="background-image: url('https://image.pollinations.ai/prompt/Cinematic%20shot%20of%20a%20modern%20mirrorless%20camera%20on%20a%20tripod,%20bokeh%20background%20with%20light%20flares,%20futuristic%20feel,%20wide%20angle%20lens,%20deep%20contrast%20and%20rich%20colors')">
+            <h1 class="slide-title" style="font-size: 4rem;">El Poder Oculto: Curvas Logarítmicas</h1>
+            <p class="slide-subtitle">Cómo las cámaras modernas capturan la luz en video y fotografía para resultados profesionales.</p>
+        </div>
+
+        <!-- Diapositiva 2: El Problema (Por qué) --><div class="slide" data-slide="1" style="background-image: url('https://image.pollinations.ai/prompt/Human%20eye%20looking%20at%20a%20scene%20with%20extreme%20dynamic%20range,%20bright%20window%20and%20dark%20room%20interior,%20cinematic,%20natural%20light,%20photorealistic')">
+            <h2 class="slide-title">1. El Problema: El Ojo vs. El Sensor</h2>
+            <p class="slide-text">
+                Nuestros ojos perciben la luz de forma <strong>logarítmica</strong>. Podemos ver detalles tanto en sombras oscuras como en luces brillantes (alto Rango Dinámico).
+            </p>
+            <p class="slide-text">
+                Un sensor de cámara estándar graba la luz de forma <strong>lineal</strong>. Esto fuerza una elección: exponer para las luces (perdiendo sombras) o para las sombras (perdiendo luces).
+            </p>
+        </div>
+
+        <!-- Diapositiva 3: La Solución (Qué es y Para qué) --><div class="slide" data-slide="2" style="background-image: url('https://image.pollinations.ai/prompt/Abstract%20graph%20showing%20a%20logarithmic%20curve%20against%20a%20linear%20curve,%20representing%20light%20perception,%20digital%20data,%20futuristic%20interface%20elements')">
+            <h2 class="slide-title">2. La Solución: ¿Qué es "Log"?</h2>
+            <p class="slide-text">
+                Una curva logarítmica (Log) es un método para <strong>codificar</strong> la luz que imita al ojo humano.
+            </p>
+            <p class="slide-text">
+                <strong>¿Para qué?</strong> Comprime la información de las luces brillantes y expande la de las sombras. Esto permite guardar un rango dinámico mucho mayor sin "quemar" (perder) detalles.
+            </p>
+        </div>
+        
+        <!-- Diapositiva 4: El Resultado Visual --><div class="slide" data-slide="3" style="background-image: url('https://image.pollinations.ai/prompt/Side-by-side%20comparison%20of%20two%20outdoor%20landscape%20photos.%20Left%20image%20is%20flat,%20desaturated,%20low%20contrast%20(LOG%20profile).%20Right%20image%20is%20richly%20color%20graded,%20high%20contrast,%20cinematic.%20Split%20screen,%20photorealistic')">
+            <h2 class="slide-title">3. El Resultado: La Imagen "Plana"</h2>
+            <p class="slide-text">
+                Cuando grabas en Log (S-Log, C-Log, V-Log, etc.), la imagen se ve "plana", lavada, grisácea y con bajo contraste.
+            </p>
+            <p class="slide-text">
+                <strong>¡Esto es bueno!</strong> Significa que la cámara ha preservado la máxima cantidad de información de luz y color.
+            </p>
+            <div class="image-comparison">
+                <figure>
+                    <img src="https://image.pollinations.ai/prompt/Outdoor%20landscape%20photo%20with%20flat%20color%20profile,%20low%20contrast,%20desaturated,%20like%20a%20LOG%20footage,%20photorealistic" alt="Imagen Log plana"
+                         onerror="this.src='https://placehold.co/350x200/777/ccc?text=Error+al+cargar+imagen'">
+                    <figcaption>Grabado en Log</figcaption>
+                </figure>
+                <figure>
+                    <img src="https://image.pollinations.ai/prompt/The%20same%20outdoor%20landscape%20photo%20with%20rich%20color%20grading,%20high%20contrast,%20cinematic%20look,%20vibrant%20colors,%20photorealistic" alt="Imagen con corrección de color"
+                         onerror="this.src='https://placehold.co/350x200/a8d/333?text=Error+al+cargar+imagen'">
+                    <figcaption>Después de Graduación</figcaption>
+                </figure>
+            </div>
+        </div>
+        
+        <!-- Diapositiva 5: Usos Actuales (Post-producción) --><div class="slide" data-slide="4" style="background-image: url('https://image.pollinations.ai/prompt/Professional%20video%20editor%20working%20on%20color%20grading%20on%20a%20computer%20screen,%20showing%20color%20wheels,%20waveforms,%20and%20LUT%20options,%20cinematic%20lighting')">
+            <h2 class="slide-title">4. Usos Actuales: Post-Producción</h2>
+            <p class="slide-text">
+                El verdadero poder del Log está en la edición. Ese archivo "plano" es un lienzo digital.
+            </p>
+            <ul class="slide-text slide-list">
+                <li><strong>Corrección de Color:</strong> Se ajusta la exposición y el balance de blancos para neutralidad.</li>
+                <li><strong>Etalonaje (Color Grading):</strong> Se aplica un estilo creativo (look cinematográfico, vintage, etc.) a la imagen.</li>
+                <li><strong>LUTs (Look-Up Tables):</strong> Son "filtros" predefinidos que convierten la imagen Log a un formato estándar (Rec.709) o aplican un look con un solo clic.</li>
+            </ul>
+        </div>
+        
+        <!-- Diapositiva 6: Importancia (Flexibilidad) --><div class="slide" data-slide="5" style="background-image: url('https://image.pollinations.ai/prompt/Cinematic%20shot%20of%20a%20filmmaker%20or%20photographer%20making%20creative%20decisions,%20looking%20thoughtfully%20at%20a%20screen%20with%20color%20options,%20dynamic%20lighting')">
+            <h2 class="slide-title">5. ¿Por qué es Importante Usarlas?</h2>
+             <p class="slide-text">
+                Grabar en Log te da <strong>FLEXIBILIDAD CREATIVA INIGUALABLE</strong>.
+            </p>
+            <p class="slide-text">
+                Te permite tener control total sobre la imagen final. Puedes rescatar detalles de una sombra profunda, corregir un cielo sobreexpuesto y decidir con precisión cómo se verá tu video o foto.
+            </p>
+            <p class="slide-text" style="color: #60a5fa; font-weight: 700;">
+                Es la diferencia entre "aceptar lo que la cámara te da" y "decidir con visión lo que quieres mostrar".
+            </p>
+        </div>
+
+        <!-- Diapositiva 7: Conclusión --><div class="slide" data-slide="6" style="background-image: url('https://image.pollinations.ai/prompt/Modern%20digital%20camera%20with%20abstract%20data%20flow%20and%20color%20waves%20behind%20it,%20representing%20high%20dynamic%20range%20capture,%20futuristic,%20clean%20design')">
+            <h2 class="slide-title">En Resumen: El Control está en Tus Manos</h2>
+            <ul class="slide-text slide-list" style="max-width: 60%;">
+                <li class="mb-4">
+                    <strong>¿Por qué?</strong>
+                    Porque el ojo ve logarítmicamente, y los sensores lineales por sí solos pierden información valiosa.
+                </li>
+                <li class="mb-4">
+                    <strong>¿Para qué?</strong>
+                    Para capturar el máximo Rango Dinámico posible, obteniendo más detalles en luces y sombras.
+                </li>
+                <li class="mb-4">
+                    <strong>¿Cómo se usa?</strong>
+                    Grabando en un perfil Log (imagen "plana") y realizando una potente corrección y etalonaje de color en post-producción.
+                </li>
+                <li>
+                    <strong>Importancia:</strong>
+                    Te proporciona una flexibilidad sin precedentes y es la base para lograr resultados profesionales y un "look" cinematográfico en tus producciones.
+                </li>
+            </ul>
+        </div>
+
+        <!-- Navegación --><div id="navigation">
+            <button id="prev-button" class="nav-button" disabled>Anterior</button>
+            <button id="next-button" class="nav-button">Siguiente</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            let currentSlide = 0;
+            const slides = document.querySelectorAll('.slide');
+            const totalSlides = slides.length;
+            const prevButton = document.getElementById('prev-button');
+            const nextButton = document.getElementById('next-button');
+
+            function showSlide(index) {
+                // Ocultar la diapositiva actual
+                slides.forEach(slide => {
+                    slide.classList.remove('active');
+                });
+
+                // Mostrar la nueva diapositiva
+                if (slides[index]) {
+                    slides[index].classList.add('active');
+                }
+                
+                currentSlide = index;
+
+                // Actualizar estado de los botones
+                if (currentSlide === 0) {
+                    prevButton.disabled = true;
+                } else {
+                    prevButton.disabled = false;
+                }
+
+                if (currentSlide === totalSlides - 1) {
+                    nextButton.disabled = true;
+                } else {
+                    nextButton.disabled = false;
+                }
+            }
+
+            // Event Listeners para los botones
+            nextButton.addEventListener('click', () => {
+                if (currentSlide < totalSlides - 1) {
+                    showSlide(currentSlide + 1);
+                }
+            });
+
+            prevButton.addEventListener('click', () => {
+                if (currentSlide > 0) {
+                    showSlide(currentSlide - 1);
+                }
+            });
+
+            // Mostrar la primera diapositiva al cargar
+            showSlide(0);
+        });
+    </script>
+</body>
+</html>
+
+
+
